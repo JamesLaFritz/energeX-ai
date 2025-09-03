@@ -67,6 +67,7 @@ $app->register(Illuminate\Translation\TranslationServiceProvider::class);
 $app->register(Illuminate\Validation\ValidationServiceProvider::class);
 $app->register(Illuminate\Hashing\HashServiceProvider::class);
 $app->register(Illuminate\Redis\RedisServiceProvider::class);
+$app->register(Illuminate\Cache\CacheServiceProvider::class);
 $app->register(PHPOpenSourceSaver\JWTAuth\Providers\LumenServiceProvider::class);
 
 $app->configure('app');
@@ -75,6 +76,7 @@ $app->configure('app');
 $app->configure('auth');
 
 $app->configure('cache');
+$app->configure('database');
 
 /*
 |--------------------------------------------------------------------------

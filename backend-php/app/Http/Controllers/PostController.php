@@ -7,24 +7,49 @@ use Illuminate\Support\Facades\Cache;
 
 class PostController extends Controller {
     public function index(){
-        return Cache::remember('posts:all', 60, fn () => Post::with('user:id,name')->latest()->get());
+    $posts = Cache::remember('posts:all', 60, function () {
+            return \App\Models\Post::with(['user:id,name,email'])->latest()->get();
+        });
+
+        return response()->json($posts, 200);
     }
 
-    public function store(Request $r){
-        $this->validate($r, [
-            'title'   => 'required',
+    public function store(Request $req){
+        $data = $this->validate($req, [
+            'title' => 'required',
             'content' => 'required',
         ]);
 
-        $post = Post::create([
-            'title'=>$r->input('title'),
-            'content'=>$r->input('content'),
-            'user_id'=>$r->user()->id,
-        ]);
+        $post = Post::create($data + ['user_id' => $req->user()->id]);
 
-        // bust caches
         Cache::forget('posts:all');
+        Cache::forget("posts:id:{$post->id}");
 
-        return response()->json($post,201);
+        return response()->json($post->load('user:id,name,email'), 201);
+    }
+
+    public function update(Request $req, $id)
+    {
+        $post = Post::findOrFail($id);
+        $post->update($this->validate($req, [
+            'title' => 'required',
+            'content' => 'required',
+        ]));
+
+        Cache::forget('posts:all');
+        Cache::forget("posts:id:{$post->id}");
+
+        return $post->fresh()->load('user:id,name,email');
+    }
+
+    public function destroy($id)
+    {
+        $post = Post::findOrFail($id);
+        $post->delete();
+
+        Cache::forget('posts:all');
+        Cache::forget("posts:id:{$id}");
+
+        return response()->noContent();
     }
 }

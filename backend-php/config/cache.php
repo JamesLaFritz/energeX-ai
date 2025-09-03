@@ -1,18 +1,17 @@
 <?php
 
+use Illuminate\Support\Str;
+
 return [
-    'default' => env('CACHE_DRIVER', 'array'),
+    'default' => env('CACHE_DRIVER', 'file'),
 
     'stores' => [
-        'array' => [
-            'driver' => 'array',
-            'serialize' => false,
-        ],
         'redis' => [
             'driver' => 'redis',
-            'connection' => 'default',
+            'connection' => env('CACHE_REDIS_CONNECTION', 'cache'),
         ],
     ],
 
-    'prefix' => env('CACHE_PREFIX', 'lumen_cache'),
+    // Keep a clear, minimal cache prefix (or blank)
+        'prefix' => env('CACHE_PREFIX', 'lumen_cache'),
 ];
