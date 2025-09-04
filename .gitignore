@@ -353,3 +353,15 @@ npm-debug.log
 yarn-error.log
 
 # End of https://www.toptal.com/developers/gitignore/api/rider,phpstorm,node,react,vue,vuejs,git,docfx
+
+# PHP / Lumen
+/vendor/
+/bootstrap/cache/*.php
+/storage/logs/
+/storage/framework/cache/**
+/storage/framework/views/**
+/storage/framework/sessions/**
+/.phpunit.result.cache
+
+# Jest coverage (already globally ignoring `coverage/`, but if you want to be explicit)
+/cache-node/coverage/

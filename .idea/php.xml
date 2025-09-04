@@ -123,6 +123,7 @@
       <path value="$PROJECT_DIR$/backend-php/vendor/lcobucci/clock" />
       <path value="$PROJECT_DIR$/backend-php/vendor/mockery/mockery" />
       <path value="$PROJECT_DIR$/backend-php/vendor/egulias/email-validator" />
+      <path value="$PROJECT_DIR$/backend-php/vendor/predis/predis" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />
