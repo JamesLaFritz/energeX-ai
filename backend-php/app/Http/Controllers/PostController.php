@@ -6,26 +6,39 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class PostController extends Controller {
-    public function index(){
-    $posts = Cache::remember('posts:all', 60, function () {
-            return \App\Models\Post::with(['user:id,name,email'])->latest()->get();
-        });
+    public function index(Request $request)
+        {
+            // 60 seconds TTL (your tests assert a positive TTL)
+            $posts = Cache::remember('posts:all', 60, function () {
+                return Post::with(['user:id,name,email'])
+                    ->orderByDesc('created_at')
+                    ->get()
+                    ->toArray();
+            });
 
-        return response()->json($posts, 200);
+            return response()->json([
+                'value' => $posts,
+                'Count' => count($posts),
+            ], 200);
     }
 
-    public function store(Request $req){
-        $data = $this->validate($req, [
-            'title' => 'required',
-            'content' => 'required',
-        ]);
+    public function store(Request $request)
+    {
+            $this->validate($request, [
+                'title'   => 'required|string|max:255',
+                'content' => 'required|string',
+            ]);
 
-        $post = Post::create($data + ['user_id' => $req->user()->id]);
+            $post = Post::create([
+                'title'   => $request->input('title'),
+                'content' => $request->input('content'),
+                'user_id' => $request->user()->id,
+            ]);
 
-        Cache::forget('posts:all');
-        Cache::forget("posts:id:{$post->id}");
+            // Bust list cache
+            $this->bustPostCaches("{$post->id}");
 
-        return response()->json($post->load('user:id,name,email'), 201);
+            return response()->json($post, 201);
     }
 
     public function update(Request $req, $id)
@@ -36,8 +49,7 @@ class PostController extends Controller {
             'content' => 'required',
         ]));
 
-        Cache::forget('posts:all');
-        Cache::forget("posts:id:{$post->id}");
+       $this->bustPostCaches("{$post->id}");
 
         return $post->fresh()->load('user:id,name,email');
     }
@@ -47,9 +59,14 @@ class PostController extends Controller {
         $post = Post::findOrFail($id);
         $post->delete();
 
-        Cache::forget('posts:all');
-        Cache::forget("posts:id:{$id}");
+        $this->bustPostCaches("{$id}");
 
         return response()->noContent();
+    }
+
+    private function bustPostCaches(int $id): void
+    {
+        Cache::forget('posts:all');
+        Cache::forget("posts:id:{$id}");
     }
 }
