@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php" colors="true">
+    <testsuites>
+        <testsuite name="Application">
+            <directory suffix="Test.php">tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_DEBUG" value="true"/>
+
+        <!-- DB -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_HOST" value="mysql"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_DATABASE" value="app"/>
+        <env name="DB_USERNAME" value="appuser"/>
+        <env name="DB_PASSWORD" value="appsecret"/>
+
+        <!-- Redis -->
+        <env name="CACHE_DRIVER" value="redis"/>
+        <env name="CACHE_PREFIX" value="lumen_cache"/>
+        <env name="REDIS_CLIENT" value="predis"/>
+        <env name="REDIS_HOST" value="redis"/>
+        <env name="REDIS_PORT" value="6379"/>
+        <env name="REDIS_DB" value="1"/>
+        <env name="REDIS_CACHE_DB" value="1"/>
+        <env name="REDIS_PREFIX" value=""/>
+
+        <!-- JWT -->
+        <env name="JWT_SECRET" value="eacfcfb9ca04d48a1055a576f2288eea9fb4c0911a35ccd746441c682c844e75b8d676cb0bd74d85e5f29a481ee1bb21c17299d895f185791a882878fa84ab8c"/>
+    </php>
+</phpunit>

@@ -1,0 +1,296 @@
+openapi: 3.1.0
+info:
+  title: energeX API
+  version: 1.0.0
+  description: A microservice API using Lumen (PHP) and Node.js (TypeScript) that integrates with Redis for caching, a MySQL database, and a simple frontend (React.js or Vue.js) to consume the API.
+servers:
+- url: http://localhost:8080
+  description: Lumen (php) - serves /api/*
+- url: http://localhost:4000
+  description: cache-node – serves /cache/*
+
+tags:
+  - name: Auth
+  - name: Posts
+  - name: Cache
+
+paths:
+  /api/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "201":
+          description: User registered successfully
+        "422":
+          description: Validation error
+        "500":
+          description: Server error
+  /api/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate user and return JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "200":
+          description: User authenticated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: 'JWT Bearer token'
+        "401":
+          description: Invalid credentials
+        "500":
+          description: Server error
+  /api/posts:
+    get:
+      tags: [Posts]
+      summary: Fetch all posts (from Lumen)
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: A list of posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListEnvelope'
+        "500":
+          description: Server error
+    post:
+      tags: [Posts]
+      summary: Create a new post
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        "201":
+          description: Post created successfully
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /api/posts/{id}:
+    get:
+      tags: [Posts]
+      summary: Fetch a single post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: A single post
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                  title:
+                    type: string
+                  content:
+                    type: string
+                  user_id:
+                    type: integer
+                  created_at:
+                    type: string
+                    format: date-time
+        "404":
+          description: Post not found
+        "500":
+          description: Server error
+          
+  /cache/health:
+    get:
+      tags: [Cache]
+      summary: Check cache-node service health
+      responses:
+        "200":
+          description: Cache node is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {type: boolean }
+                  redis: {type: boolean }
+          
+  /cache/posts:
+    get:
+      tags: [Cache]
+      summary: Fetch all posts (from cache-node)
+      responses:
+        "200":
+          description: A list of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                    title:
+                      type: string
+                    content:
+                      type: string
+                    user_id:
+                      type: integer
+                    created_at:
+                      type: string
+                      format: date-time
+        "500":
+          description: Server error
+
+  /cache/posts/{id}:
+    get:
+      tags: [Cache]
+      summary: Fetch a single post(from cache-node)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A single post
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                  title:
+                    type: string
+                  content:
+                    type: string
+                  user_id:
+                    type: integer
+                  created_at:
+                    type: string
+                    format: date-time
+        "404":
+          description: Post not found
+        "500":
+          description: Server error          
+          
+components:
+  securitySchemes: 
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        content:
+          type: string
+        user_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    PostListEnvelope:
+      type: object
+      description: Shape returned by Lumen /api/posts
+      properties: 
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        Count:
+          type: integer
+      required: [value, Count]
+    
+    PostCreate:
+      type: object
+      required: [ title, content ]
+      properties:
+        title: { type: string }
+        content: { type: string }
+      
+    RegisterRequest:
+      type: object
+      required: [ name, email, password ]
+      properties:
+          name: { type: string }
+          email: { type: string, format: email }
+          password: { type: string, format: password }
+      
+    LoginRequest:
+      type: object
+      required: [ email, password ]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
